@@ -1,3 +1,13 @@
+"""Neural network lab
+    *
+    *
+
+    param:
+        Author: Jakob Schmidt & Jonas Bihr
+        Date: 05.06.21
+        Version: 1.0.0 - free
+"""
+
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -32,28 +42,38 @@ import cv2
 windowWidth = 1000 
 minWidth = 200
 windowHeight = 600
-numberNeuralNetworkList = []
-catdogNeuralNetworkList = []
+number_neural_network_list = []
+catdog_neural_network_list = []
 # currently acitve NN
-neuralNetwork = []
+neural_network = []
 # checks if the number or the catdog NN is active
-currentActiveNN = 0
+current_active_nn = 0
 # slider for backquery
-onodeSliderList=[]
+onode_slider_list=[]
 # filepath to query a picture
-pictureFilename = ""
+pictuer_filename = ""
 # the "name" of the ouputNodes from the NN
-onodeNames = [["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],["cat", "dog"]]
+onnode_names =  [
+                    ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
+                    ["cat", "dog"]
+                ]
+
+# vars for the canvas - drawing
+color_fg = 'black'
+color_bg = 'white'
+canvas_old_x = None
+canvas_old_y = None
+penwidth = 5
 
 
 # paths
 # https://stackoverflow.com/questions/7165749/open-file-in-a-relative-location-in-python
 # relative path to files
-fileDir = os.path.dirname(os.path.realpath('__file__'))
-training_data_path = os.path.join(fileDir, '../../trainingdata/testdata_mnist/mnist_train.csv')
-test_data_path = os.path.join(fileDir, '../../trainingdata/testdata_mnist/mnist_test.csv') 
-trained_Number_NN_Path = os.path.join(fileDir, 'Trained_NN/Numbers/numberNN*') 
-trained_CatDog_NN_Path = os.path.join(fileDir, 'Trained_NN/CatDog/catdogNN*') 
+file_dir = os.path.dirname(os.path.realpath('__file__'))
+training_data_path = os.path.join(file_dir, '../../trainingdata/testdata_mnist/mnist_train.csv')
+test_data_path = os.path.join(file_dir, '../../trainingdata/testdata_mnist/mnist_test.csv') 
+trained_number_nn_path = os.path.join(file_dir, 'Trained_NN/Numbers/numberNN*') 
+trained_catdog_nn_path = os.path.join(file_dir, 'Trained_NN/CatDog/catdogNN*') 
 
 
 
@@ -78,12 +98,12 @@ root.geometry("1000x600")
 
 
 # create the NN buttons at the top
-button_chooseNN_number = Button(root, text="Neural Network Numbers", command = lambda: openNN_Number())
-button_chooseNN_catdog = Button(root, text="Neural Network Cat Or Dog", command=lambda: openNN_CatDog())
+button_choose_nn_number = Button(root, text="Neural Network Numbers", command = lambda: open_nn_number())
+button_choose_nn_catdog = Button(root, text="Neural Network Cat Or Dog", command=lambda: open_nn_catdog())
 
 # add the NN buttons to the grid
-button_chooseNN_number.grid(row=0, column=0, columnspan=2)
-button_chooseNN_catdog.grid(row=0, column=2, columnspan=2)
+button_choose_nn_number.grid(row=0, column=0, columnspan=2)
+button_choose_nn_catdog.grid(row=0, column=2, columnspan=2)
 
 
 # create a label for the notebook
@@ -100,69 +120,90 @@ notebook.pack()
 ####################### Tabs ########################
 
 # create the tabs
-frame_chooseTrainedNN = Frame(notebook, width=windowWidth, height=windowHeight, bg="")
-frame_queryPicture = Frame(notebook, width=windowWidth, height=windowHeight, padx=20, pady=20)
-frame_drawPicture = Frame(notebook, width=windowWidth, height=windowHeight)
-frame_backqueryNN = Frame(notebook, width=windowWidth, height=windowHeight, padx=20, pady=20)
+frame_choose_trained_nn = Frame(notebook, width=windowWidth, height=windowHeight, bg="")
+frame_query_picture = Frame(notebook, width=windowWidth, height=windowHeight, padx=20, pady=20)
+frame_draw_picture = Frame(notebook, width=windowWidth, height=windowHeight)
+frame_backquery_nn = Frame(notebook, width=windowWidth, height=windowHeight, padx=20, pady=20)
 
-frame_chooseTrainedNN.pack(fill=BOTH, expand=TRUE)
-frame_queryPicture.pack(fill=BOTH, expand=TRUE)
-frame_drawPicture.pack(fill=BOTH, expand=TRUE)
-frame_backqueryNN.pack(fill=BOTH, expand=TRUE)
+frame_choose_trained_nn.pack(fill=BOTH, expand=TRUE)
+frame_query_picture.pack(fill=BOTH, expand=TRUE)
+frame_draw_picture.pack(fill=BOTH, expand=TRUE)
+frame_backquery_nn.pack(fill=BOTH, expand=TRUE)
 
 # add the tabs to the notebook
-notebook.add(frame_chooseTrainedNN, text="choose a trained NN")
-notebook.add(frame_queryPicture, text="query a picture")
-notebook.add(frame_drawPicture, text="draw a picture")
-notebook.add(frame_backqueryNN, text="backquery the NN")
+notebook.add(frame_choose_trained_nn, text="choose a trained NN")
+notebook.add(frame_query_picture, text="query a picture")
+notebook.add(frame_draw_picture, text="draw a picture")
+notebook.add(frame_backquery_nn, text="backquery the NN")
 
 
-####################### frame_chooseTrainedNN Layout ########################
+####################### frame_choose_trained_nn Layout ########################
 
-# add a label to frame_chooseTrainedNN for the current NN
-chose_NN_Current = Label(frame_chooseTrainedNN, padx=10, pady=20, text="no NN chosen currently")
-chose_NN_Current.pack(fill=X)
+# add a label to frame_choose_trained_nn for the current NN
+chose_nn_current = Label(frame_choose_trained_nn, padx=10, pady=20, text="no NN chosen currently")
+chose_nn_current.pack(fill=X)
 
-# add a Frame to frame_chooseTrainedNN for available NN
-choose_NN_Available_Frame = Frame(frame_chooseTrainedNN, bg="green")
-choose_NN_Available_Frame.pack(fill=X)
+# add a Frame to frame_choose_trained_nn for available NN
+choose_nn_available_frame = Frame(frame_choose_trained_nn, bg="green")
+choose_nn_available_frame.pack(fill=X)
 # create a scrollbar for the available NN
-choose_NN_Available_scrollbar = Scrollbar(choose_NN_Available_Frame)
+choose_nn_available_scrollbar = Scrollbar(choose_nn_available_frame)
 # create a Listbox for the available NN
-choose_NN_Available_Listbox = Listbox(choose_NN_Available_Frame,height=25, yscrollcommand=choose_NN_Available_scrollbar.set)
+choose_nn_available_listbox = Listbox(choose_nn_available_frame,height=25, yscrollcommand=choose_nn_available_scrollbar.set)
 # configure the scrollbar
-choose_NN_Available_scrollbar.config(command=choose_NN_Available_Listbox.yview)
+choose_nn_available_scrollbar.config(command=choose_nn_available_listbox.yview)
 # add scrollbar 
-choose_NN_Available_scrollbar.pack(side=RIGHT, fill=Y)
+choose_nn_available_scrollbar.pack(side=RIGHT, fill=Y)
 # add Listbox
-choose_NN_Available_Listbox.pack(fill=BOTH, expand=TRUE)
+choose_nn_available_listbox.pack(fill=BOTH, expand=TRUE)
 
 # create a Button to select a NN
-choose_NN_Available_Button = Button(frame_chooseTrainedNN, text="select NN", padx=20, pady=5, command=lambda: loadNN())
+choose_nn_available_button = Button(frame_choose_trained_nn, text="select NN", padx=20, pady=5, command=lambda: load_nn())
 # add the button
-choose_NN_Available_Button.pack(side=TOP)
+choose_nn_available_button.pack(side=TOP)
 
 
-####################### frame_queryPicture Layout ########################
+
+####################### frame_query_picture Layout ########################
 
 # create a Button to select a file
-select_Picture_Dialog_Button = Button(frame_queryPicture, text="select a picture", padx=20, pady=5, command=lambda: selectPicture())
+select_picture_dialog_button = Button(frame_query_picture, text="select a picture", padx=20, pady=5, command=lambda: select_picture())
 # add the button
-select_Picture_Dialog_Button.pack(side=TOP)
+select_picture_dialog_button.pack(side=TOP)
 # add a label with the picture path
-selected_Picture_Label = Label(frame_queryPicture, padx=10, pady=20, text="no picture chosen currently")
+selected_picture_label = Label(frame_query_picture, padx=10, pady=20, text="no picture chosen currently")
 # add the label
-selected_Picture_Label.pack(side=TOP, fill=X)
+selected_picture_label.pack(side=TOP, fill=X)
 
 # create a Button to query the picture
-queryPicture_Button = Button(frame_queryPicture, text="query the picture", padx=20, pady=5, command=lambda: queryPicture())
+query_picture_button = Button(frame_query_picture, text="query the picture", padx=20, pady=5, command=lambda: query_picture())
 # add the button
-queryPicture_Button.pack(side=TOP)
+query_picture_button.pack(side=TOP)
 
-# add a Frame to frame_chooseTrainedNN for available NN
-queryPicture_Result_Frame = Frame(frame_queryPicture, padx=20, pady=30)
-queryPicture_Result_Frame.pack(fill=X)
+# add a Frame to frame_choose_trained_nn for available NN
+query_picture_result_frame = Frame(frame_query_picture, padx=20, pady=30)
+query_picture_result_frame.pack(fill=X)
 
+
+
+####################### frame_draw_picture Layout ########################
+
+# create a frame for the settings of the canvas
+draw_settings_frame = Frame(frame_draw_picture, padx = 5, pady = 5)
+# label for the pen size slider
+#Label(draw_settings_frame, text='Pen Width:',font=('arial 18')).grid(row=0,column=0)
+# add pen size slider
+#draw_pen_size_slider = ttk.Scale(draw_settings_frame,from_= 5, to = 100,command=lambda: changeW(),orient=HORIZONTAL)
+#draw_pen_size_slider.set(penwidth)
+#draw_pen_size_slider.grid(row=0,column=1,ipadx=30)
+# create a Button to clear the canvas
+draw_picture_clear_button = Button(frame_draw_picture, text="clear the canvas", padx=20, pady=5, command=lambda: clear())
+draw_picture_clear_button.pack()
+# add the frame
+draw_settings_frame.pack(side=LEFT)
+
+c = Canvas(frame_draw_picture,width=300,height=300,bg=color_bg)
+c.pack(side=LEFT)
 
 
 
@@ -178,196 +219,230 @@ queryPicture_Result_Frame.pack(fill=X)
 
 ####################### for the NN buttons ###################################
 
-def openNN_Number():
-    global currentActiveNN, onodeNameCurrent
-    currentActiveNN = 0
+def open_nn_number():
+    global current_active_nn
+    current_active_nn = 0
     return
 
-def openNN_CatDog():
-    global currentActiveNN, onodeNameCurrent
-    currentActiveNN = 1
+def open_nn_catdog():
+    global current_active_nn
+    current_active_nn = 1
     return
 
 
-####################### for frame_chooseTrainedNN tab ########################
 
-def getAllNN():
-    print("getAllNN")
+
+####################### for frame_choose_trained_nn tab ########################
+
+def get_all_nn():
+    print("get_all_nn")
     # for every numberNN file in the folder
-    for trained_NN_File in glob.glob(trained_Number_NN_Path):
-        print("getAllNN current file: ",trained_NN_File)
+    for trained_nn_file in glob.glob(trained_number_nn_path):
+        print("get_all_nn current file: ",trained_nn_file)
         # open the file and save the object 
-        with open(trained_NN_File, 'rb') as input:
+        with open(trained_nn_file, 'rb') as input:
             # append it to the list of NNs
-            numberNeuralNetworkList.append(dill.load(input))
+            number_neural_network_list.append(dill.load(input))
 
     # for every catdogNN file in the folder
-    for trained_NN_File in glob.glob(trained_CatDog_NN_Path):
+    for trained_nn_file in glob.glob(trained_catdog_nn_path):
         # open the file and save the object 
-        with open(trained_NN_File, 'rb') as input:
+        with open(trained_nn_file, 'rb') as input:
             # append it to the list of NNs
-            catdogNeuralNetworkList.append(pickle.load(input))
+            catdog_neural_network_list.append(pickle.load(input))
 
 
-def displayNN(nnList):
-    print("displayNN")
+def display_nn(nn_list):
+    print("display_nn")
     # clear the old Listbox entries
-    choose_NN_Available_Listbox.delete(0,END)
+    choose_nn_available_listbox.delete(0,END)
 
     # iterate through the array and display the NNs
-    for nn in nnList:
+    for nn in nn_list:
         # display text on the List like (nodes: 100   learningrate: 0.2   trainingepochs: 2   performance: 0.98   )
-        displayTextChooseNNButton = "nodes: %s \t  learningrate: %s   trainingepochs: %s   performance: %s   "%(nn.hnodes, nn.lr, nn.epochs, nn.performance)
+        display_text_choose_nn_button = "nodes: %s \t  learningrate: %s   trainingepochs: %s   performance: %s   "%(nn.hnodes, nn.lr, nn.epochs, nn.performance)
         # add the text to the listbox
-        choose_NN_Available_Listbox.insert(END, displayTextChooseNNButton)
+        choose_nn_available_listbox.insert(END, display_text_choose_nn_button)
 
 
-def loadNN():
-    global neuralNetwork
+def load_nn():
+    global neural_network
     # get the index of the select List entry
-    loadIndex = choose_NN_Available_Listbox.curselection()[0]
-    print("loadNN index: ", loadIndex)
-    # the index is retrieved and the NN gets chosen out of the current NNList
-    if(currentActiveNN==0):
+    load_index = choose_nn_available_listbox.curselection()[0]
+    print("load_nn index: ", load_index)
+    # the index is retrieved and the NN gets chosen out of the current nn_list
+    if(current_active_nn==0):
         print("number is activ")
-        neuralNetwork = numberNeuralNetworkList[loadIndex]
+        neural_network = number_neural_network_list[load_index]
     else:
-        neuralNetwork = catdogNeuralNetworkList[loadIndex]
+        neural_network = catdog_neural_network_list[load_index]
     # reload 
-    reloadForNewNN()
+    reload_for_new_nn()
 
 
-####################### for frame_queryPicture tab ########################
 
 
-def selectPicture():
-    global pictureFilename
+
+####################### for frame_query_picture tab ########################
+
+
+def select_picture():
+    global pictuer_filename
     # select a file path over dialog
-    pictureFilename = filedialog.askopenfilename(initialdir=fileDir, title="select an image to query", filetypes=(("png","*.png"),("jpg","*.jpg")))
+    pictuer_filename = filedialog.askopenfilename(initialdir=file_dir, title="select an image to query", filetypes=(("png","*.png"),("jpg","*.jpg")))
     # print the path on the GUI
-    selected_Picture_Label.configure(text="current path  ->  "+pictureFilename)
+    selected_picture_label.configure(text="current path  ->  " + pictuer_filename)
     # add image to the GUI
-    selected_Picture = ImageTk.PhotoImage(Image.open(pictureFilename))
-    display_Selected_Picture_Label = Label(frame_queryPicture, image=selected_Picture)
-    display_Selected_Picture_Label.pack()
+    selected_picture = ImageTk.PhotoImage(Image.open(pictuer_filename))
+    display_selected_picture_label = Label(frame_query_picture, image=selected_picture)
+    display_selected_picture_label.pack()
 
 
-def queryPicture():
+def query_picture():
     # prepare the picture
-    imageToQuery = preparePictureForNN(pictureFilename)
+    imageToQuery = prepare_picture_for_nn(pictuer_filename)
     # query the picture
-    resultList = neuralNetwork.query(imageToQuery)
+    resultList = neural_network.query(imageToQuery)
     # show results
-    showQueryResult(resultList)
+    show_query_result(resultList)
 
 
-def showQueryResult(resList):
+def show_query_result(resList):
     # clear the old results
     # https://stackoverflow.com/questions/50656826/how-can-i-delete-the-content-in-a-tkinter-frame/50657381
-    for widget in queryPicture_Result_Frame.winfo_children():
+    for widget in query_picture_result_frame.winfo_children():
         widget.destroy()
     
     # the index of the highest value corresponds to the label
     result = numpy.argmax(resList)
     # add label with the result
-    resultLabel = Label(queryPicture_Result_Frame, pady=20, text="neural Network thinks it's a %s"%(onodeNames[currentActiveNN][result]))
+    result_label = Label(query_picture_result_frame, pady=20, text="neural Network thinks it's a %s"%(onnode_names[current_active_nn][result]))
     # show label
-    resultLabel.pack(fill=X)
+    result_label.pack(fill=X)
 
     # add for every calculated onode a value
     for index, result in enumerate(resList):
         # add label with node and result
-        onodeResultLabel = Label(queryPicture_Result_Frame, text="output node %s:   %.3f%%"%(onodeNames[currentActiveNN][index], 100*result))
+        onoderesult_label = Label(query_picture_result_frame, text="output node %s:   %.3f%%"%(onnode_names[current_active_nn][index], 100*result))
         # show label
-        onodeResultLabel.pack(fill=X)
+        onoderesult_label.pack(fill=X)
     
-def preparePictureForNN(picturePath):
+def prepare_picture_for_nn(picturePath):
     # define the image size (only the square is given)
-    imgSize = int(math.sqrt(neuralNetwork.inodes))
+    img_size = int(math.sqrt(neural_network.inodes))
     # get image from path
     originalImage = cv2.imread(picturePath)
     # resize the image with openCv2
-    resizedImage = cv2.resize(originalImage, (imgSize, imgSize), interpolation=cv2.INTER_NEAREST)
+    resizedImage = cv2.resize(originalImage, (img_size, img_size), interpolation=cv2.INTER_NEAREST)
     # gray the image
     resizedGrayImage = cv2.cvtColor(resizedImage, cv2.COLOR_BGR2GRAY)
     # load image data into an array
     img_array = resizedGrayImage.flatten()
     # reshape from resized to input_nodes value, invert values
-    img_data  = 255.0 - img_array.reshape(neuralNetwork.inodes)
+    img_data  = 255.0 - img_array.reshape(neural_network.inodes)
     # then scale data to range from 0.01 to 1.0
     img_data = (img_data / 255.0 * 0.99) + 0.01
     # return the changed image data
     return img_data
 
-####################### for frame_drawPicture tab #########################
 
 
 
-####################### for frame_backqueryNN tab #########################
 
-def init_BackqueryNN_Tab():
-    global onodeSliderList
-    global backquery_Picture_Frame
+####################### for frame_draw_picture tab #########################
 
-    onodeSliderList=[]
+def paint(e):
+    global canvas_old_x, canvas_old_y
+    if canvas_old_x and canvas_old_y:
+        c.create_line(canvas_old_x,canvas_old_y,e.x,e.y,width=penwidth,fill=color_fg,capstyle=ROUND,smooth=TRUE)
+
+    canvas_old_x = e.x
+    canvas_old_y = e.y
+
+
+def reset(e):
+    global canvas_old_x, canvas_old_y
+    canvas_old_x = None
+    canvas_old_y = None 
+
+
+def changeW():
+    global penwidth
+    penwidth = draw_pen_size_slider.get()
+
+def clear():
+    c.delete(ALL)
+
+
+
+
+
+
+####################### for frame_backquery_nn tab #########################
+
+def init_backquery_nn_tab():
+    global onode_slider_list
+    global backquery_picture_frame
+
+    onode_slider_list=[]
     # iterate through the array and display the NNs
-    for onode in range(neuralNetwork.onodes):
+    for onode in range(neural_network.onodes):
         # add label to specifiy which output node is altered
-        onodeSliderLabel = Label(frame_backqueryNN, text="output node %s"%(onodeNames[currentActiveNN][onode]))
+        onode_slider_label = Label(frame_backquery_nn, text="output node %s"%(onnode_names[current_active_nn][onode]))
         # show label
-        onodeSliderLabel.grid(row=onode, column=0)
+        onode_slider_label.grid(row=onode, column=0)
         # create slider and add it to the array
-        onodeSliderList.append(Scale(frame_backqueryNN, from_=1, to=99, length=minWidth, orient=HORIZONTAL))
+        onode_slider_list.append(Scale(frame_backquery_nn, from_=1, to=99, length=minWidth, orient=HORIZONTAL))
         # show slider
-        onodeSliderList[onode].grid(row=onode, column=1)
+        onode_slider_list[onode].grid(row=onode, column=1)
     
     # create the button to compute
-    button_Compute_Backquery = Button(frame_backqueryNN, padx=20, pady=5, text="compute the backquery", command = lambda: compute_Backquery())
+    button_compute_backquery = Button(frame_backquery_nn, padx=20, pady=5, text="compute the backquery", command = lambda: compute_backquery())
     # add the button to the grid
-    button_Compute_Backquery.grid(row=neuralNetwork.onodes, column=0, columnspan=2)
-    #button_Compute_Backquery.place(anchor="center")
+    button_compute_backquery.grid(row=neural_network.onodes, column=0, columnspan=2)
+    #button_compute_backquery.place(anchor="center")
         
     # create the Frame to hold the picture
-    backquery_Picture_Frame = Frame(frame_backqueryNN, bg="black")
+    backquery_picture_frame = Frame(frame_backquery_nn, bg="black")
     # add the Frame to the grid
-    backquery_Picture_Frame.grid(row=0, column=2, padx=40, rowspan=neuralNetwork.onodes)
+    backquery_picture_frame.grid(row=0, column=2, padx=40, rowspan=neural_network.onodes)
 
-def compute_Backquery():
+def compute_backquery():
     # clear the old picture
     # https://stackoverflow.com/questions/50656826/how-can-i-delete-the-content-in-a-tkinter-frame/50657381
-    for widget in backquery_Picture_Frame.winfo_children():
+    for widget in backquery_picture_frame.winfo_children():
         widget.destroy()
 
     # node value list
-    output_Node_Value = []
+    output_node_falue = []
 
     # get all values in order - save in the output value list
-    for slider in onodeSliderList:
+    for slider in onode_slider_list:
         # divide by 100 to get percentage
-        output_Node_Value.append(slider.get()/100.0)
-    print(output_Node_Value)
+        output_node_falue.append(slider.get()/100.0)
+    print(output_node_falue)
 
     # backquery and get the image data
-    image_data = neuralNetwork.backquery(output_Node_Value)
+    image_data = neural_network.backquery(output_node_falue)
     # define the image size (only the square is given)
-    imgSize = int(math.sqrt(neuralNetwork.inodes))
+    img_size = int(math.sqrt(neural_network.inodes))
     # plot image data
-    matplotlib.pyplot.imshow(image_data.reshape(imgSize,imgSize), cmap='Greys', interpolation='None')
+    matplotlib.pyplot.imshow(image_data.reshape(img_size,img_size), cmap='Greys', interpolation='None')
     matplotlib.pyplot.show()
     # show the image in the GUI
     # https://stackoverflow.com/questions/19612419/updating-matplotlib-imshow-from-within-a-tkinter-gui
     fig = matplotlib.pyplot.figure(figsize=(4,4))
-    canvas = FigureCanvasTkAgg(fig, backquery_Picture_Frame)
+    canvas = FigureCanvasTkAgg(fig, backquery_picture_frame)
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)    
 
 ####################### for other #######################################
 
-def reloadForNewNN():
+def reload_for_new_nn():
     # reload the name to the new one
-    chose_NN_Current.configure(text="current NN  ->  nodes: %s   learningrate: %s   trainingepochs: %s   performance: %s   "%(neuralNetwork.hnodes, neuralNetwork.lr, neuralNetwork.epochs, neuralNetwork.performance))
+    chose_nn_current.configure(text="current NN  ->  nodes: %s   learningrate: %s   trainingepochs: %s   performance: %s   "%(neural_network.hnodes, neural_network.lr, neural_network.epochs, neural_network.performance))
     # reload the backquerry sliders
-    init_BackqueryNN_Tab()
+    init_backquery_nn_tab()
 
 
 
@@ -529,8 +604,11 @@ class neuralNetwork:
 ######################################################################
 
 # init all the stuff
-getAllNN()
-displayNN(numberNeuralNetworkList)
+get_all_nn()
+display_nn(number_neural_network_list)
+# adding events to the canvas to draw on
+c.bind('<B1-Motion>',paint)#drawing the line 
+c.bind('<ButtonRelease-1>',reset)
 
 # start the GUI
 root.mainloop()
