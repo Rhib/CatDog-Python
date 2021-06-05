@@ -1,4 +1,4 @@
-"""Neural network lab
+"""Neural network visualizer
     *
     *
 
@@ -43,27 +43,30 @@
 
         Bonuspunkte: -- Copy+Paste vs. Eigenaufwand
 """
+from logging import log
 
-from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog
-import glob
-import numpy
-# scipy.special for the sigmoid function expit()
-import scipy.special
-import os
-# reading the NN 
-import pickle
-import dill
-import matplotlib.pyplot
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import math
-from PIL import ImageTk, Image
-import cv2
-import logging
-import datetime
-from NumberNN import *
-from pathlib import Path
+
+try:
+    import glob
+    import numpy
+    import os
+    import pickle
+    import dill
+    import matplotlib.pyplot
+    import cv2
+    import logging
+    import datetime
+    import math
+
+    from tkinter import *
+    from tkinter import ttk
+    from tkinter import filedialog
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    from PIL import ImageTk, Image
+    from NumberNN import *
+    from pathlib import Path
+except ImportError as e:
+    logging.error("Import: The Programm was unable to import all modules\n%s"%(e))
 
 
 
@@ -97,9 +100,9 @@ class neuralNetworkVisualizer:
             backquery_slider_frame(Frame):          frame for the sliders in tab nr.4
             backquery_picture_frame(Frame):         frame for the picture in tab nr.4
             
-            file_dir(Path): 
-            trained_nn_path_list(Path): 
-            logging_file_name(Path): 
+            file_dir(Path):                         relative path of the Project folder
+            trained_nn_path_list(Path):             path of for the different saved neural networks 
+            logging_file_name(Path):                path of the logging file
 
             neural_network_list(Frame):             list for the loaded neural networks in
             neural_network(Frame):                  currently acitve neural network 
@@ -161,18 +164,20 @@ class neuralNetworkVisualizer:
         self.canvas_old_y = None
         self.penwidth = 20
 
-
+        self.create_paths()
 
         # logging
         # configure the logger
         logging.basicConfig(filename=self.logging_file_name, level=logging.DEBUG)
         logging.debug("debug")
-        logging.info("info")
+        logging.info("Function: __init__: logging file was created \npath: %s"%(self.logging_file_name))
         logging.warning("warning")
             logging.error("error")
         logging.info("starting")
+                
+        logging.info("Function: __init__: all variables are initialized")
 
-        self.create_paths()
+
        
         # create the Tkinter window
         self.root.title("Neural Network Visualizer")
@@ -185,6 +190,7 @@ class neuralNetworkVisualizer:
         self.init_GUI_tab_2()
         self.init_GUI_tab_3()
         self.init_GUI_tab_4()
+        logging.info("Function: __init__: GUI is build")
 
 
 
@@ -197,7 +203,7 @@ class neuralNetworkVisualizer:
 
 
     def init_GUI_layout(self):
-        """init_GUI_window
+        """init_GUI_layout
             * creates the basic GUI layout 
             * a frame at the top with the buttons
             * and a frame beneath with the content
@@ -217,8 +223,8 @@ class neuralNetworkVisualizer:
         # create a Frame for the buttons at the top
         root_button_frame = Frame(self.root, padx=100, pady=5)
         # create the NN buttons at the top
-        button_choose_nn_number = Button(root_button_frame, text="Neural Network Numbers", command = lambda: self.open_nn_number())
-        button_choose_nn_catdog = Button(root_button_frame, text="Neural Network Cat Or Dog", command=lambda: self.open_nn_catdog())
+        button_choose_nn_number = Button(root_button_frame, text="Neural Network Numbers", command=self.open_nn_number)
+        button_choose_nn_catdog = Button(root_button_frame, text="Neural Network Cat Or Dog", command=self.open_nn_catdog)
         # add the NN buttons to the grid
         button_choose_nn_number.pack(side=LEFT)
         button_choose_nn_catdog.pack(side=RIGHT)
@@ -259,7 +265,7 @@ class neuralNetworkVisualizer:
         logging.info("GUI: creating tabs in GUI")
 
         # create the tabs
-        self.frame_choose_trained_nn = Frame(self.notebook, bg="")
+        self.frame_choose_trained_nn = Frame(self.notebook)
         self.frame_query_picture = Frame(self.notebook, padx=20, pady=20)
         self.frame_draw_picture = Frame(self.notebook)
         self.frame_backquery_nn = Frame(self.notebook, padx=20, pady=20)
@@ -317,7 +323,7 @@ class neuralNetworkVisualizer:
         self.choose_nn_available_listbox.pack(fill=BOTH, expand=TRUE)
 
         # create a Button to select a NN
-        choose_nn_available_button = Button(self.frame_choose_trained_nn, text="select nn", padx=20, pady=5, command=lambda: self.load_nn())
+        choose_nn_available_button = Button(self.frame_choose_trained_nn, text="select nn", padx=20, pady=5, command=self.load_nn)
         # add the button
         choose_nn_available_button.pack(side=TOP, fill=X)
 
@@ -346,7 +352,7 @@ class neuralNetworkVisualizer:
         logging.info("GUI: initialize tab 2: query a picture")
 
         # create a Button to select a file
-        select_picture_dialog_button = Button(self.frame_query_picture, text="select a picture", padx=20, pady=5, command=lambda: self.select_picture())
+        select_picture_dialog_button = Button(self.frame_query_picture, text="select a picture", padx=20, pady=5, command=self.select_picture)
         # add the button
         select_picture_dialog_button.pack(side=TOP)
 
@@ -356,7 +362,7 @@ class neuralNetworkVisualizer:
         self.selected_picture_label.pack(side=TOP, fill=X)
 
         # create a button to query the picture
-        query_picture_button = Button(self.frame_query_picture, text="query the picture", padx=20, pady=5, command=lambda: self.query_picture())
+        query_picture_button = Button(self.frame_query_picture, text="query the picture", padx=20, pady=5, command=self.query_picture)
         # add the button
         query_picture_button.pack(side=TOP)
 
@@ -396,7 +402,7 @@ class neuralNetworkVisualizer:
         draw_picture_clear_button = Button(draw_buttons_frame, text="clear the canvas", padx=20, pady=5, command=self.clear)
         draw_picture_clear_button.pack(side=TOP)
         # create a Button to query the drawn image
-        query_drawn_picture_button = Button(draw_buttons_frame, text="query the image", padx=20, pady=5, command=lambda: self.query_drawn_image())
+        query_drawn_picture_button = Button(draw_buttons_frame, text="query the image", padx=20, pady=5, command=self.query_drawn_image)
         query_drawn_picture_button.pack(side=TOP)
         # add the frame
         draw_buttons_frame.pack(side=LEFT)
@@ -411,7 +417,7 @@ class neuralNetworkVisualizer:
         self.canvas.bind('<ButtonRelease-1>',self.reset)
 
         # create a frame to display the result of the neural network
-        self.draw_picture_result_frame = Frame(self.frame_query_picture, padx=20, pady=30)
+        self.draw_picture_result_frame = Frame(self.frame_draw_picture, padx=20, pady=30)
         # add the frame
         self.draw_picture_result_frame.pack(side=RIGHT)
 
@@ -442,12 +448,12 @@ class neuralNetworkVisualizer:
         self.backquery_slider_frame.grid(row=0, column=0)
 
         # create the button to compute
-        button_compute_backquery = Button(self.frame_backquery_nn, padx=20, pady=5, text="compute the backquery", command = lambda: self.compute_backquery())
+        button_compute_backquery = Button(self.frame_backquery_nn, padx=20, pady=5, text="compute the backquery", command = self.compute_backquery)
         # add the button to the grid
         button_compute_backquery.grid(row=1, column=0)
             
         # create the Frame to hold the picture
-        self.backquery_picture_frame = Frame(self.frame_backquery_nn, bg="black")
+        self.backquery_picture_frame = Frame(self.frame_backquery_nn)
         # add the Frame to the grid
         self.backquery_picture_frame.grid(row=0, column=1, padx=40, rowspan=2)
 
@@ -485,6 +491,8 @@ class neuralNetworkVisualizer:
         logging.info("Function: open_nn_number")
 
         self.current_active_nn = 0
+        logging.info("Function: open_nn_number: current neural network is %s"%(self.current_active_nn))
+
         # load the data into the GUI
         self.load_data()
         return
@@ -510,6 +518,11 @@ class neuralNetworkVisualizer:
         logging.info("Function: open_nn_catdog")
 
         self.current_active_nn = 1
+        logging.info("Function: open_nn_catdog: current neural network is %s"%(self.current_active_nn))
+
+        # load the data into the GUI
+        self.load_data()
+
         return
 
 
@@ -536,6 +549,33 @@ class neuralNetworkVisualizer:
                 * files are loaded without errors
         """
         logging.info("Function: get_all_nn")
+
+        # tab 1
+        # clear old List of these neural networks
+        self.neural_network_list[self.current_active_nn] = []        
+        # reset the nn label
+        self.chose_nn_current_label.configure(text="no nn chosen currently")
+        
+        
+        # tab 2
+        # clear the path of the picture
+        self.picture_filename = None
+        # clear the path on the GUI
+        self.selected_picture_label.configure(text="no picture chosen currently")
+        # clear the frame that displays the output nodes in the frame_query_picture
+        self.clear_frame(self.query_picture_result_frame)
+        
+        # tab 3
+        # clear the canvas
+        self.clear()
+        # clear the frame that displays the output nodes in the frame_query_picture
+        self.clear_frame(self.draw_picture_result_frame)
+
+        # tab 4
+        # clear the frame that displays the sliders
+        self.clear_frame(self.backquery_slider_frame)
+        # clear the frame that holds the computed picture
+        self.clear_frame(self.backquery_picture_frame)
 
         # for every numberNN file in the folder
         for trained_nn_file in glob.glob(self.trained_nn_path_list[self.current_active_nn]):
@@ -990,6 +1030,10 @@ class neuralNetworkVisualizer:
         
         # reload the name to the new one
         self.chose_nn_current_label.configure(text="current nn  ->  nodes: %s   learningrate: %s   trainingepochs: %s   performance: %s   "%(self.neural_network.hnodes, self.neural_network.lr, self.neural_network.epochs, self.neural_network.performance))
+        # clear the frame that displays the output nodes in the frame_query_picture
+        self.clear_frame(self.query_picture_result_frame)
+        # clear the canvas
+        self.clear()
         # reload the backquerry sliders
         self.load_backquery_nn_tab()
 
@@ -1035,24 +1079,30 @@ class neuralNetworkVisualizer:
                 * log dir is created if missing
         """
         logging.info("Function: create_paths")
-        
-        # relative path to files
-        # source [3]
-        self.file_dir = os.path.dirname(os.path.realpath('__file__'))
 
-        # path of for the different saved neural networks 
-        self.trained_nn_path_list =  [
-                                    os.path.join(self.file_dir, 'Trained_NN/Numbers/numberNN*'),
-                                    os.path.join(self.file_dir, 'Trained_NN/CatDog/catdogNN*')
-                                ] 
-        # dir for the logging file
-        logging_file_path = os.path.join(self.file_dir, '../../Logs')
-        # path of the logging file
-        self.logging_file_name = os.path.join(logging_file_path, 'log_neuralNetworkVisualizer%s.txt'%(datetime.datetime.now().strftime("-%Y_%m_%d-%H_%M_%S")))
+        try: 
+            # relative path to files
+            # source [3]
+            self.file_dir = os.path.dirname(os.path.realpath('__file__'))
+
+            # path of for the different saved neural networks 
+            self.trained_nn_path_list =  [
+                                        os.path.join(self.file_dir, 'Trained_NN/Numbers/numberNN*'),
+                                        os.path.join(self.file_dir, 'Trained_NN/CatDog/catdogNN*')
+                                    ] 
+            # dir for the logging file
+            logging_file_path = os.path.join(self.file_dir, '../../Logs')
+            # path of the logging file
+            self.logging_file_name = os.path.join(logging_file_path, 'log_neuralNetworkVisualizer%s.txt'%(datetime.datetime.now().strftime("-%Y_%m_%d-%H_%M_%S")))
+        except Exception as e:
+            logging.error("Function: create_paths: unable to create the paths \n%s"%(e))
         
-        # create dir if not exist
-        # source [5]
-        Path(logging_file_path).mkdir(parents=True, exist_ok=True)
+        try: 
+            # create dir if not exist
+            # source [5]
+            Path(logging_file_path).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logging.error("Function: create_paths: unable create the dir \n%s"%(e))
 
     
 
