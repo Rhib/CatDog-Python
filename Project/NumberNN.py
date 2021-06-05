@@ -1,3 +1,39 @@
+"""Number Neural Network
+    *
+    *
+
+    param:
+        Author:     Jakob Schmidt & Jonas Bihr
+        Date:       06.06.21
+        Version:    1.0.0 
+        Licencse:   free
+
+    sources:
+        [1] neural network code from 
+            "Neuronale Netze selbst programmieren"
+            "ein verständlicher einstieg mit Python"
+            von Tariq Rashid, O'Reilly Verlag
+            license GPLv2 
+
+    Bewertung
+        Projektkriterien:
+        Kernkriterien:
+        (20%) - alle Funktionen und Module sowie Klassen müssen Docstrings nach z.B. Googole (Docstrings pep8) enthalten
+        (10%) - alle Funktionen und Klassen müssen jeweils 2 Testbeschreibungen enthalten
+
+        Sitekriterien:
+        (10%) - Eigenleistung: geeignetes Logverfahren suchen und anwenden
+        (20%) - Codequalität und Stil
+        (20%) - Funktionalität (requirement Informationen --- welche Module, Frameworks, Versionen, OS ... )
+
+        weitere Kriterien:
+        - wir wollen am Ende kein kundenfähiges System (20%)
+        - Programm Intiutivität für den Nutzer möglichst einfach
+        - Besondere Bemühungen und Aufwand, Elemente (Sound, Grafikdateien, Gameplay,... )
+        - pi mal Daumen 48 Stunden zur Orientierung
+
+        Bonuspunkte: -- Copy+Paste vs. Eigenaufwand
+"""
 
 from tkinter import *
 from tkinter import ttk
@@ -25,10 +61,31 @@ import datetime
 
 # neural network class definition
 class neuralNetwork:
+    """ neuralNetwork
+
+        * this class is a neural network to recognize numbers from 0 to 9
+        * it uses an activation function and an inversed activation function
+        * testdata and trainingdata is used to train the neural network
+        * the neural network can be queried and backqueried
+
+        attributes:
+            inodes(int):           set number of nodes in input layer 
+            hnodes(int):           set number of nodes in hidden layer
+            onodes(int):           set number of nodes in oputput layer
+            lr(float):             learning rate in the neural network
+            wih(list[int][float]): weight matrix input to hidden node
+            who(list[int][float]): weight matrix hidden to output node
+            performance(float):    indicator how good neural network works
+            epochs(int):           reputation of training data
+
+        test:
+            * loads the neural networks
+            * the neural network recognizes the correct number
+    """
 
     # initialise the neural network
     def __init__(self, inputnodes, hiddennodes, outputnodes, learningrate):
-        # set number of nodes in each inpzt, hidden oputput layer
+        # set number of nodes in each input, hidden oputput layer
         self.inodes = inputnodes
         self.hnodes = hiddennodes
         self.onodes = outputnodes
@@ -42,8 +99,8 @@ class neuralNetwork:
         self.who = numpy.random.normal(0.0, pow(self.onodes, -0.5), (self.onodes, self.hnodes))
         
         # acitivation function is the sigmoid funciton
-        #self.activation_function = lambda x: scipy.special.expit(x)
-        #self.inverse_activation_function = lambda x: scipy.special.logit(x)
+        # self.activation_function = lambda x: scipy.special.expit(x)
+        # self.inverse_activation_function = lambda x: scipy.special.logit(x)
         
         # performance 
         self.performance = 0
@@ -54,6 +111,20 @@ class neuralNetwork:
         pass
     
     def activation_function(self, arr):
+        """activation_function
+            * function to activate the neural network 
+            * sigmoid funtion is used to get values for weights between 0 and 1
+
+            param:
+                arr     array of numbers to be transformed with sigmoid (input of node)
+
+            return:
+                arr     array of sigmoid transformed values (output of node)
+
+            test:
+                * numbers are transformed correctly
+                * return is correct format
+        """
         arrX = 0
         for x in arr:
             arrY = 0
@@ -66,6 +137,19 @@ class neuralNetwork:
         return arr    
 
     def inverse_activation_function(self, arr):
+            """inverse_activation_function
+                * function to use output values and the logarithm function to get input values
+
+                param:
+                    arr     array of numbers to be transformed with log (output of node)
+
+                return:
+                    arr     array of log transformed values (input of node)
+
+                test:
+                    * numbers are transformed correctly
+                    * return is correct format
+            """
         arrX = 0
         for x in arr:
             arrY = 0
@@ -79,6 +163,22 @@ class neuralNetwork:
     
     # train the neural network
     def train(self, inputs_list, targets_list):
+            """train
+                * query input list through neural network
+                * output is compared to target_list
+                * calculate difference back to weight function (who, wih)
+
+                param:
+                    input_list(list(float))     data to be queried to neural network
+                    targets_list(list(float))   expected output of neural network
+            
+                return:
+                    none
+
+                test:
+                    * node layers calculated correctly
+                    * weights are updated correctly
+        """
         # convert inputs list to 2d array
         inputs = numpy.array(inputs_list, ndmin=2).T
         targets = numpy.array(targets_list, ndmin=2).T
@@ -108,6 +208,21 @@ class neuralNetwork:
 
     # query the neural network
     def query(self, inputs_list):
+            """query
+                * layers calculate values
+                * values are transfered between layers
+                * output node is calculated
+
+                param:
+                    inputs_list(list(float))     data to be queried to neural network   
+                return:
+                    final_outputs(list(float))   calculated solution of the neural network
+
+                test:
+                * output is expected list
+                * nodes are calculated correctly
+
+        """
         # convert inputs list to 2d array
         inputs = numpy.array(inputs_list, ndmin=2).T
         
@@ -129,6 +244,20 @@ class neuralNetwork:
     # eg target are the values at the right of the network, albeit used as input
     # eg hidden_output is the signal to the right of the middle nodes
     def backquery(self, targets_list):
+        """backquery
+            * query the targets list backwards through neural network
+            * result are input nodes
+
+            param:
+                targets_list(list(float))   expected output of neural network
+            return:
+                inputs(list(float))         expected input to get target list as result from neural network
+
+            test:
+            * input nodes calculated correctly
+            * log function works correctly
+
+        """
         # transpose the targets list to a vertical array
         final_outputs = numpy.array(targets_list, ndmin=2).T
         

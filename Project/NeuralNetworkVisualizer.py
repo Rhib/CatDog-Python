@@ -169,7 +169,7 @@ class neuralNetworkVisualizer:
         logging.debug("debug")
         logging.info("info")
         logging.warning("warning")
-        logging.error("error")
+            logging.error("error")
         logging.info("starting")
 
         self.create_paths()
@@ -406,7 +406,8 @@ class neuralNetworkVisualizer:
         # add the canvas
         self.canvas.pack(side=LEFT)
         # adding events to the canvas to draw on
-        self.canvas.bind('<B1-Motion>',self.paint)#drawing the line 
+        self.canvas.bind('<B1-Motion>',self.paint)
+        #drawing the line 
         self.canvas.bind('<ButtonRelease-1>',self.reset)
 
         # create a frame to display the result of the neural network
