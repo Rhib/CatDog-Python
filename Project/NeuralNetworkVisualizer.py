@@ -57,6 +57,7 @@ try:
     import logging
     import datetime
     import math
+    import Image, ImageDraw
 
     from tkinter import *
     from tkinter import ttk
@@ -409,6 +410,22 @@ class neuralNetworkVisualizer:
 
         # create the canvas to draw on
         self.canvas = Canvas(self.frame_draw_picture,width=300,height=300,bg=self.color_bg)
+        #Jonas test
+        # PIL create an empty image and draw object to draw on
+        # memory only, not visible
+        image1 = Image.new("RGB", (width, height), white)
+        draw = ImageDraw.Draw(image1)
+
+        # do the Tkinter canvas drawings (visible)
+        cv.create_line([0, center, width, center], fill='green')
+
+        # do the PIL image/draw (in memory) drawings
+        draw.line([0, center, width, center], green)
+
+        # PIL image can be saved as .png .jpg .gif or .bmp file (among others)
+        filename = "my_drawing.jpg"
+        image1.save(filename)
+        #Jonas test
         # add the canvas
         self.canvas.pack(side=LEFT)
         # adding events to the canvas to draw on
