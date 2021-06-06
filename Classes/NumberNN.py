@@ -16,12 +16,13 @@
             license GPLv2 
 
 """
-
-import numpy
-# scipy.special for the sigmoid function expit()
-import scipy.special
-# reading the NN 
-import logging
+try:
+    import numpy
+    # scipy.special for the sigmoid function expit()
+    import scipy.special
+    import logging
+except ImportError as e:
+    logging.error("Class NumberNN Import: The Programm was unable to import all modules\n%s"%(e))
 
 
 #####################################################################
@@ -32,10 +33,10 @@ import logging
 class neuralNetwork:
     """ neuralNetwork
 
-        * this class is a neural network to recognize numbers from 0 to 9
-        * it uses an activation function and an inversed activation function
-        * testdata and trainingdata is used to train the neural network
-        * the neural network can be queried and backqueried
+        * this class is a neural network that can recognize numbers from 0 to 9
+        * the neural network can be trained
+        * data can be queried through the neural network
+        * and the ouput nodes can be backqueried through the neural network to calculate the input nodes
 
         attributes:
             inodes(int):           set number of nodes in input layer 
@@ -52,6 +53,10 @@ class neuralNetwork:
             * the neural network recognizes the correct number
     """
 
+
+
+
+
     # initialise the neural network
     def __init__(self, inputnodes, hiddennodes, outputnodes, learningrate):
         # set number of nodes in each input, hidden oputput layer
@@ -66,19 +71,21 @@ class neuralNetwork:
         # weights inside the arrays aer w_i_j, where link is from node i to node j in the next layer
         self.wih = numpy.random.normal(0.0, pow(self.hnodes, -0.5), (self.hnodes, self.inodes))
         self.who = numpy.random.normal(0.0, pow(self.onodes, -0.5), (self.onodes, self.hnodes))
-        
-        # acitivation function is the sigmoid funciton
-        # self.activation_function = lambda x: scipy.special.expit(x)
-        # self.inverse_activation_function = lambda x: scipy.special.logit(x)
-        
+                
         # performance 
         self.performance = 0
         
         # epochs
         self.epochs = 0
 
+        logging.info("Class NumberNN: __init__: variables are initialized")
+
         pass
     
+
+
+
+
     def activation_function(self, arr):
         """activation_function
             * function to activate the neural network 
@@ -94,6 +101,8 @@ class neuralNetwork:
                 * numbers are transformed correctly
                 * return is correct format
         """
+        logging.info("Class NumberNN: activation_function")
+
         arrX = 0
         for x in arr:
             arrY = 0
@@ -104,6 +113,10 @@ class neuralNetwork:
             arrX += 1
             pass
         return arr    
+
+
+
+
 
     def inverse_activation_function(self, arr):
         """inverse_activation_function
@@ -119,18 +132,23 @@ class neuralNetwork:
                 * numbers are transformed correctly
                 * return is correct format
         """
+        logging.info("Class NumberNN: inverse_activation_function")
+
         arrX = 0
         for x in arr:
             arrY = 0
             for y in x:
                 arr[arrX][arrY] = scipy.special.logit(y)
                 arrY += 1
-                logging.debug("calculate inverse")
                 pass
             arrX += 1
             pass
         return arr
     
+
+
+
+
     # train the neural network
     def train(self, inputs_list, targets_list):
         """train
@@ -176,6 +194,10 @@ class neuralNetwork:
         
         pass
 
+
+
+
+
     # query the neural network
     def query(self, inputs_list):
         """query
@@ -208,6 +230,10 @@ class neuralNetwork:
         return final_outputs
 
     
+
+
+
+
     # backquery the neural network
     # we'll use the same termnimology to each item, 
     # eg target are the values at the right of the network, albeit used as input

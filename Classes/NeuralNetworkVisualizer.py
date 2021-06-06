@@ -44,29 +44,25 @@
 
         Bonuspunkte: -- Copy+Paste vs. Eigenaufwand
 """
-from logging import log
 
 
 try:
     import glob
     import numpy
     import os
-    import pickle
     import dill
     import matplotlib.pyplot
     import cv2
     import logging
     import datetime
     import math
-    from PIL import Image
-    from PIL import ImageDraw
 
+    from Classes.NumberNN import *
     from tkinter import *
     from tkinter import ttk
     from tkinter import filedialog
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-    from PIL import ImageTk, Image
-    from NumberNN import *
+    from PIL import Image
+    from PIL import ImageDraw
     from pathlib import Path
 except ImportError as e:
     logging.error("Import: The Programm was unable to import all modules\n%s"%(e))
@@ -174,7 +170,7 @@ class neuralNetworkVisualizer:
         # logging
         # configure the logger
         logging.basicConfig(filename=self.logging_file_name, level=logging.DEBUG, force=TRUE)
-        logging.warning("Function: __init__: logging file was created \npath: %s"%(self.logging_file_name))                
+        logging.info("Function: __init__: logging file was created \npath: %s"%(self.logging_file_name))                
         logging.info("Function: __init__: all variables are initialized")
 
         # create the Tkinter window
@@ -1166,7 +1162,7 @@ class neuralNetworkVisualizer:
                                         os.path.join(self.file_dir, 'Trained_NN/CatDog/catdogNN*')
                                     ] 
             # dir for the logging file
-            logging_file_path = os.path.join(self.file_dir, '../../Logs')
+            logging_file_path = os.path.join(self.file_dir, '../CatDog-Python-Logs')
 
             try: 
                 # create dir if not exist
@@ -1190,17 +1186,3 @@ class neuralNetworkVisualizer:
 
 
 
-
-
-
-######################################################################
-##                       Init and Loop the GUI                      ##
-######################################################################
-
-
-
-
-if __name__ == "__main__":
-    root = Tk()
-    window = neuralNetworkVisualizer(root)
-    root.mainloop()
