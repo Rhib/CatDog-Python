@@ -101,7 +101,6 @@ class neuralNetworkVisualizer:
             draw_picture_result_frame(Frame):       frame to display the result of the neural network (tab nr.3)            
             canvas(Canvas):                         canvas to draw an own image
             backquery_slider_frame(Frame):          frame for the sliders in tab nr.4
-            backquery_picture_frame(Frame):         frame for the picture in tab nr.4
             self.temporary_drawn_image(Image):      temporary image that can be queried through the neural network
             self.pil_canvas(ImageDraw):             drawing on the temporary image
 
@@ -145,7 +144,6 @@ class neuralNetworkVisualizer:
         self.draw_picture_result_frame = None
         self.canvas = None
         self.backquery_slider_frame = None
-        self.backquery_picture_frame = None
         self.temporary_drawn_image = None
         self.pil_canvas = None
 
@@ -154,9 +152,9 @@ class neuralNetworkVisualizer:
         self.logging_file_name = None
 
         self.neural_network_list = [[],[]]
-        self.neural_network = []
+        self.neural_network = None
         self.current_active_nn = 0
-        self.onode_slider_list=[]
+        self.onode_slider_list= None
         self.picture_filename = None
         self.onnode_names = [
                                 ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
@@ -179,8 +177,6 @@ class neuralNetworkVisualizer:
         logging.warning("Function: __init__: logging file was created \npath: %s"%(self.logging_file_name))                
         logging.info("Function: __init__: all variables are initialized")
 
-
-       
         # create the Tkinter window
         self.root.title("Neural Network Visualizer")
         self.root.geometry("1000x600")
@@ -460,11 +456,6 @@ class neuralNetworkVisualizer:
         button_compute_backquery = Button(self.frame_backquery_nn, padx=20, pady=5, text="compute the backquery", command = self.compute_backquery)
         # add the button to the grid
         button_compute_backquery.grid(row=1, column=0)
-            
-        # create the Frame to hold the picture
-        self.backquery_picture_frame = Frame(self.frame_backquery_nn)
-        # add the Frame to the grid
-        self.backquery_picture_frame.grid(row=0, column=1, padx=40, rowspan=2)
 
 
 
@@ -504,6 +495,7 @@ class neuralNetworkVisualizer:
 
         # load the data into the GUI
         self.load_data()
+        
         return
 
 
@@ -583,16 +575,22 @@ class neuralNetworkVisualizer:
         # tab 4
         # clear the frame that displays the sliders
         self.clear_frame(self.backquery_slider_frame)
-        # clear the frame that holds the computed picture
-        self.clear_frame(self.backquery_picture_frame)
 
-        # for every numberNN file in the folder
-        for trained_nn_file in glob.glob(self.trained_nn_path_list[self.current_active_nn]):
-            logging.info("get_all_nn load file %s"%(trained_nn_file))
-            # open the file and save the object 
-            with open(trained_nn_file, 'rb') as input:
-                # append it to the list of NNs
-                self.neural_network_list[self.current_active_nn].append(dill.load(input))
+        logging.info("Function: get_all_nn: GUI is cleared")
+
+        try:
+            # for every nn file in the folder of the current nn
+            for trained_nn_file in glob.glob(self.trained_nn_path_list[self.current_active_nn]):
+                logging.info("Function: get_all_nn: load file %s"%(trained_nn_file))
+                # open the file and save the object 
+                with open(trained_nn_file, 'rb') as input:
+                    # append it to the list of NNs
+                    self.neural_network_list[self.current_active_nn].append(dill.load(input))
+            logging.info("Function: get_all_nn: all neural networks are loaded")
+        except Exception as e:
+            logging.error("Function: get_all_nn: the programm was not able to read the neural networks from the folder \n%s"%(e))
+        
+
 
 
 
@@ -648,12 +646,17 @@ class neuralNetworkVisualizer:
         """
         logging.info("Function: load_nn")
 
-        # get the index of the select List entry
-        load_index = self.choose_nn_available_listbox.curselection()[0]
-        # the index is retrieved and the NN gets chosen out of the current nn_list
-        self.neural_network = self.neural_network_list[self.current_active_nn][load_index]
-        # reload 
-        self.reload_for_new_nn()
+        try:
+            # get the index of the select List entry
+            load_index = self.choose_nn_available_listbox.curselection()[0]
+            # the index is retrieved and the NN gets chosen out of the current nn_list
+            self.neural_network = self.neural_network_list[self.current_active_nn][load_index]
+            # reload 
+            self.reload_for_new_nn()
+            logging.info("Function: load_nn: neural network nr.%s is selected"%(load_index))
+        except Exception as e:
+            logging.error("Function: load_nn: the programm was not able to select the neural network \n%s"%(e))
+            
 
 
 
@@ -680,14 +683,14 @@ class neuralNetworkVisualizer:
         """
         logging.info("Function: select_picture")
 
-        # select a file path over dialog
-        self.picture_filename = filedialog.askopenfilename(initialdir=self.file_dir, title="select an image to query", filetypes=(("png","*.png"),("jpg","*.jpg")))
+        try:
+            # select a file path over dialog
+            self.picture_filename = filedialog.askopenfilename(initialdir=self.file_dir, title="select an image to query", filetypes=(("png","*.png"),("jpg","*.jpg")))
+        except Exception as e:
+            logging.error("Function: select_picture: the programm was not able to select a picture from the file dialog \n%s"%(e))
+
         # print the path on the GUI
         self.selected_picture_label.configure(text="current path  ->  " + self.picture_filename)
-        # add image to the GUI
-        #selected_picture = ImageTk.PhotoImage(Image.open(self.picture_filename))
-        #display_selected_picture_label = Label(frame_query_picture, image=selected_picture)
-        #display_selected_picture_label.pack()
 
 
 
@@ -711,12 +714,23 @@ class neuralNetworkVisualizer:
         """
         logging.info("Function: query_picture")
 
-        # prepare the picture
-        imageToQuery = self.prepare_picture_for_nn(self.picture_filename)
-        # query the picture
-        resultList = self.neural_network.query(imageToQuery)
-        # show results
-        self.show_query_result(resultList, self.query_picture_result_frame)
+        # check if filepath exist
+        if self.picture_filename is not None:
+            # prepare the picture
+            imageToQuery = self.prepare_picture_for_nn(self.picture_filename)
+            # check if the prepare was succesfull
+            if imageToQuery is not None:
+                # query the picture
+                resultList = self.neural_network.query(imageToQuery)
+                # show results
+                self.show_query_result(resultList, self.query_picture_result_frame)
+                logging.info("Function: query_picture: picture was queried through the neural network")
+
+            else:
+                logging.warning("Function: query_picture: picture could not be prepared")
+
+        else:
+            logging.warning("Function: query_picture: no file path is given")
 
 
 
@@ -740,22 +754,34 @@ class neuralNetworkVisualizer:
         """
         logging.info("Function: prepare_picture_for_nn")
 
-        # define the image size (only the square of the axis is given)
-        img_size = int(math.sqrt(self.neural_network.inodes))
-        # get image from path
-        originalImage = cv2.imread(picturePath)
-        # resize the image with openCv2
-        resizedImage = cv2.resize(originalImage, (img_size, img_size), interpolation=cv2.INTER_NEAREST)
-        # gray the image
-        resizedGrayImage = cv2.cvtColor(resizedImage, cv2.COLOR_BGR2GRAY)
-        # load image data into an array
-        img_array = resizedGrayImage.flatten()
-        # reshape from resized to input_nodes value, invert values
-        img_data  = 255.0 - img_array.reshape(self.neural_network.inodes)
-        # then scale data to range from 0.01 to 1.0
-        img_data = (img_data / 255.0 * 0.99) + 0.01
-        # return the changed image data
-        return img_data
+        # check if neural network is chosen
+        if self.neural_network is not None:
+            # define the image size (only the square of the axis is given)
+            img_size = int(math.sqrt(self.neural_network.inodes))
+
+            try:
+                # get image from path
+                originalImage = cv2.imread(picturePath)
+                # resize the image with openCv2
+                resizedImage = cv2.resize(originalImage, (img_size, img_size), interpolation=cv2.INTER_NEAREST)
+                # gray the image
+                resizedGrayImage = cv2.cvtColor(resizedImage, cv2.COLOR_BGR2GRAY)
+                # load image data into an array
+                img_array = resizedGrayImage.flatten()
+                # reshape from resized to input_nodes value, invert values
+                img_data  = 255.0 - img_array.reshape(self.neural_network.inodes)
+                # then scale data to range from 0.01 to 1.0
+                img_data = (img_data / 255.0 * 0.99) + 0.01
+                # return the changed image data
+                return img_data
+
+            except Exception as e:
+                logging.error("Function: prepare_picture_for_nn: the programm was not able to prepare the picture \n%s"%(e))
+                return None
+
+        else:
+            logging.warning("Function: prepare_picture_for_nn: no neural network is chosen")
+
 
 
 
@@ -781,20 +807,26 @@ class neuralNetworkVisualizer:
 
         # clear the old results
         self.clear_frame(frame)
-        
-        # the index of the highest value corresponds to the label
-        result = numpy.argmax(resList)
-        # add label with the result
-        result_label = Label(frame, pady=20, text="neural Network thinks it's a %s"%(self.onnode_names[self.current_active_nn][result]))
-        # show label
-        result_label.pack(fill=X)
 
-        # add for every calculated onode a value
-        for index, result in enumerate(resList):
-            # add label with node and result
-            onoderesult_label = Label(frame, text="output node %s:   %.3f%%"%(self.onnode_names[self.current_active_nn][index], 100*result))
+        try:        
+            # the index of the highest value corresponds to the label
+            result = numpy.argmax(resList)
+            # add label with the result
+            result_label = Label(frame, pady=20, text="neural Network thinks it's a %s"%(self.onnode_names[self.current_active_nn][result]))
             # show label
-            onoderesult_label.pack(fill=X)
+            result_label.pack(fill=X)
+
+            # add for every calculated onode a value
+            for index, result in enumerate(resList):
+                # add label with node and result
+                onoderesult_label = Label(frame, text="output node %s:   %.3f%%"%(self.onnode_names[self.current_active_nn][index], 100*result))
+                # show label
+                onoderesult_label.pack(fill=X)
+
+            logging.info("Function: show_query_result: results are displayed")
+            
+        except Exception as e:
+            logging.error("Function: show_query_result: the programm was not able to display the result \n%s"%(e))
         
 
 
@@ -820,15 +852,21 @@ class neuralNetworkVisualizer:
         """
         logging.info("Function: paint")
 
-        # source [2]
-        if self.canvas_old_x and self.canvas_old_y:
-            self.canvas.create_line(self.canvas_old_x,self.canvas_old_y,e.x,e.y,width=self.penwidth,fill=self.color_fg,capstyle=ROUND,smooth=TRUE)
-            # PIL can not draw a line with pen width - drawing a rectangle
-            half = int(self.penwidth/2)
-            self.pil_canvas.rectangle([self.canvas_old_x-half,self.canvas_old_y-half,e.x+half,e.y+half], self.color_fg)
+        try:
+            # source [2]
+            if self.canvas_old_x and self.canvas_old_y:
+                self.canvas.create_line(self.canvas_old_x,self.canvas_old_y,e.x,e.y,width=self.penwidth,fill=self.color_fg,capstyle=ROUND,smooth=TRUE)
+                # PIL can not draw a line with pen width - drawing a rectangle
+                half = int(self.penwidth/2)
+                self.pil_canvas.rectangle([self.canvas_old_x-half,self.canvas_old_y-half,e.x+half,e.y+half], self.color_fg)
 
-        self.canvas_old_x = e.x
-        self.canvas_old_y = e.y
+            self.canvas_old_x = e.x
+            self.canvas_old_y = e.y
+
+            logging.info("Function: paint: painted on canvas")
+
+        except Exception as e:
+            logging.error("Function: paint: the programm was not able to paint on the canvas \n%s"%(e))
 
 
 
@@ -871,7 +909,7 @@ class neuralNetworkVisualizer:
 
             test:
                 * canvas is empty
-                * 
+                * pil canvas is drawn all white
         """
         logging.info("Function: clear")
 
@@ -899,7 +937,6 @@ class neuralNetworkVisualizer:
             test:
                 * 
                 * 
-            //TODO
         """
         logging.info("Function: query_drawn_image")
         
@@ -907,12 +944,22 @@ class neuralNetworkVisualizer:
         filename = "temporary_save_picture_drawn_on_canvas.jpg"
         self.temporary_drawn_image.save(filename)
 
-        # prepare the picture
-        imageToQuery = self.prepare_picture_for_nn(filename)
-        # query the picture
-        resultList = self.neural_network.query(imageToQuery)
-        # show results
-        self.show_query_result(resultList, self.draw_picture_result_frame)
+        try:
+            # prepare the picture
+            imageToQuery = self.prepare_picture_for_nn(filename)
+            # check if the prepare was succesfull
+            if imageToQuery is not None:
+                # query the picture
+                resultList = self.neural_network.query(imageToQuery)
+                # show results
+                self.show_query_result(resultList, self.draw_picture_result_frame)
+                logging.info("Function: query_drawn_image: picture was queried through the neural network")
+
+            else:
+                logging.warning("Function: query_drawn_image: picture could not be prepared")
+
+        except Exception as e:
+            logging.error("Function: query_drawn_image: the programm was not able to query the drawn picture through the neural network \n%s"%(e))
         
         # remove temporary saved image
         os.remove(filename)
@@ -983,32 +1030,32 @@ class neuralNetworkVisualizer:
         """
         logging.info("Function: compute_backquery")
 
-        # clear the old picture
-        self.clear_frame(self.backquery_picture_frame)
+        # check if neural network is chosen
+        if self.neural_network is not None:
+            # node value list
+            output_node_value = []
+            # get all values in order - save in the output value list
+            for slider in self.onode_slider_list:
+                # divide by 100 to get percentage
+                output_node_value.append(slider.get()/100.0)
 
-        # node value list
-        output_node_value = []
-        # get all values in order - save in the output value list
-        for slider in self.onode_slider_list:
-            # divide by 100 to get percentage
-            output_node_value.append(slider.get()/100.0)
+            try:
+                # backquery and get the image data
+                image_data = self.neural_network.backquery(output_node_value)
+                # define the image size (only the square of the axis is given)
+                img_size = int(math.sqrt(self.neural_network.inodes))
+                # plot image data
+                matplotlib.pyplot.imshow(image_data.reshape(img_size,img_size), cmap='Greys', interpolation='None')
+                # show the image in extra window
+                matplotlib.pyplot.show()
+                
+                logging.info("Function: compute_backquery: output nodes were backqueried succesfull")
 
-        # backquery and get the image data
-        image_data = self.neural_network.backquery(output_node_value)
-        # define the image size (only the square of the axis is given)
-        img_size = int(math.sqrt(self.neural_network.inodes))
-        # plot image data
-        matplotlib.pyplot.imshow(image_data.reshape(img_size,img_size), cmap='Greys', interpolation='None')
-        # show the image in extra window
-        matplotlib.pyplot.show()
+            except Exception as e:
+                logging.error("Function: compute_backquery: the programm was not able to backquery or display the result \n%s"%(e))
 
-        ## not working //TODO
-        # show the image in the GUI
-        # https://stackoverflow.com/questions/19612419/updating-matplotlib-imshow-from-within-a-tkinter-gui
-        fig = matplotlib.pyplot.figure(figsize=(4,4))
-        canvas = FigureCanvasTkAgg(fig, self.backquery_picture_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)    
+        else:
+            logging.warning("Function: compute_backquery: no neural network is chosen")
 
 
 
@@ -1030,7 +1077,7 @@ class neuralNetworkVisualizer:
 
             test:
                 * all data is loaded
-                * TODO
+                * all neural networks are displayed
         """
         logging.info("Function: load_data")
         self.get_all_nn()

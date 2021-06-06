@@ -17,24 +17,11 @@
 
 """
 
-from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog
-import glob
 import numpy
 # scipy.special for the sigmoid function expit()
 import scipy.special
-import os
 # reading the NN 
-import pickle
-import dill
-import matplotlib.pyplot
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import math
-from PIL import ImageTk, Image
-import cv2
 import logging
-import datetime
 
 
 #####################################################################
@@ -138,6 +125,7 @@ class neuralNetwork:
             for y in x:
                 arr[arrX][arrY] = scipy.special.logit(y)
                 arrY += 1
+                logging.debug("calculate inverse")
                 pass
             arrX += 1
             pass
