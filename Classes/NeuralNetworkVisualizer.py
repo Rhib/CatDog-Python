@@ -25,24 +25,6 @@
         [6] convert the canvas to a jpg file (temporary)
             https://stackoverflow.com/questions/9886274/how-can-i-convert-canvas-content-to-an-image
 
-    Bewertung
-        Projektkriterien:
-        Kernkriterien:
-        (20%) - alle Funktionen und Module sowie Klassen müssen Docstrings nach z.B. Googole (Docstrings pep8) enthalten
-        (10%) - alle Funktionen und Klassen müssen jeweils 2 Testbeschreibungen enthalten
-
-        Sitekriterien:
-        (10%) - Eigenleistung: geeignetes Logverfahren suchen und anwenden
-        (20%) - Codequalität und Stil
-        (20%) - Funktionalität (requirement Informationen --- welche Module, Frameworks, Versionen, OS ... )
-
-        weitere Kriterien:
-        - wir wollen am Ende kein kundenfähiges System (20%)
-        - Programm Intiutivität für den Nutzer möglichst einfach
-        - Besondere Bemühungen und Aufwand, Elemente (Sound, Grafikdateien, Gameplay,... )
-        - pi mal Daumen 48 Stunden zur Orientierung
-
-        Bonuspunkte: -- Copy+Paste vs. Eigenaufwand
 """
 
 
@@ -186,6 +168,8 @@ class neuralNetworkVisualizer:
         self.init_GUI_tab_4()
         logging.info("Function: __init__: GUI is build")
 
+        # load data as default
+        self.load_data()
 
 
 
