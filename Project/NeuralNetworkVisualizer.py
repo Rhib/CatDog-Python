@@ -22,7 +22,8 @@
             https://stackoverflow.com/questions/50656826/how-can-i-delete-the-content-in-a-tkinter-frame/50657381
         [5] create a directory for the logs
             https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
-
+        [6] convert the canvas to a jpg file (temporary)
+            https://stackoverflow.com/questions/9886274/how-can-i-convert-canvas-content-to-an-image
 
     Bewertung
         Projektkriterien:
@@ -57,7 +58,8 @@ try:
     import logging
     import datetime
     import math
-    import Image, ImageDraw
+    from PIL import Image
+    from PIL import ImageDraw
 
     from tkinter import *
     from tkinter import ttk
@@ -100,22 +102,24 @@ class neuralNetworkVisualizer:
             canvas(Canvas):                         canvas to draw an own image
             backquery_slider_frame(Frame):          frame for the sliders in tab nr.4
             backquery_picture_frame(Frame):         frame for the picture in tab nr.4
-            
+            self.temporary_drawn_image(Image):      temporary image that can be queried through the neural network
+            self.pil_canvas(ImageDraw):             drawing on the temporary image
+
             file_dir(Path):                         relative path of the Project folder
             trained_nn_path_list(Path):             path of for the different saved neural networks 
             logging_file_name(Path):                path of the logging file
 
-            neural_network_list(Frame):             list for the loaded neural networks in
-            neural_network(Frame):                  currently acitve neural network 
-            current_active_nn(Frame):               determins which neural network is active 
-            onode_slider_list(Frame):               slider for backquery 
-            picture_filename(Frame):                filepath to query a picture 
-            onnode_names(Frame):                    the "name" of the ouputNodes from the NN 
-            color_fg(Frame):                        foreground color of the canvas 
-            color_bg(Frame):                        background color of the canvas 
-            canvas_old_x(Frame):                    x coordinate on the canvas 
-            canvas_old_y(Frame):                    y coordinate on the canvas  
-            penwidth(Frame):                        penwidth on the canvas 
+            neural_network_list(list[class]):       list for the loaded neural networks in
+            neural_network(class):                  currently acitve neural network 
+            current_active_nn(int):                 determins which neural network is active 
+            onode_slider_list(list[Slider]):        slider for backquery 
+            picture_filename(path):                 filepath to query a picture 
+            onnode_names(list[String]):             the "name" of the ouputNodes from the NN 
+            color_fg(color):                        foreground color of the canvas 
+            color_bg(color):                        background color of the canvas 
+            canvas_old_x(int):                      x coordinate on the canvas 
+            canvas_old_y(int):                      y coordinate on the canvas  
+            penwidth(int):                          penwidth on the canvas 
 
         test:
             * Opens and displays correct GUI
@@ -142,6 +146,8 @@ class neuralNetworkVisualizer:
         self.canvas = None
         self.backquery_slider_frame = None
         self.backquery_picture_frame = None
+        self.temporary_drawn_image = None
+        self.pil_canvas = None
 
         self.file_dir = None
         self.trained_nn_path_list = None
@@ -152,10 +158,10 @@ class neuralNetworkVisualizer:
         self.current_active_nn = 0
         self.onode_slider_list=[]
         self.picture_filename = None
-        self.onnode_names =  [
-                            ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
-                            ["cat", "dog"]
-                        ]
+        self.onnode_names = [
+                                ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
+                                ["cat", "dog"]
+                            ]
 
         # vars for the canvas - drawing
         # source [2]
@@ -169,13 +175,8 @@ class neuralNetworkVisualizer:
 
         # logging
         # configure the logger
-        logging.basicConfig(filename=self.logging_file_name, level=logging.DEBUG)
-        logging.debug("debug")
-        logging.info("Function: __init__: logging file was created \npath: %s"%(self.logging_file_name))
-        logging.warning("warning")
-            logging.error("error")
-        logging.info("starting")
-                
+        logging.basicConfig(filename=self.logging_file_name, level=logging.DEBUG, force=TRUE)
+        logging.warning("Function: __init__: logging file was created \npath: %s"%(self.logging_file_name))                
         logging.info("Function: __init__: all variables are initialized")
 
 
@@ -376,7 +377,6 @@ class neuralNetworkVisualizer:
 
 
 
-        ####################### frame_draw_picture Layout ########################
     def init_GUI_tab_3(self):
         """init_GUI_tab_3
             * creates the content of the third tab
@@ -410,22 +410,12 @@ class neuralNetworkVisualizer:
 
         # create the canvas to draw on
         self.canvas = Canvas(self.frame_draw_picture,width=300,height=300,bg=self.color_bg)
-        #Jonas test
-        # PIL create an empty image and draw object to draw on
-        # memory only, not visible
-        image1 = Image.new("RGB", (width, height), white)
-        draw = ImageDraw.Draw(image1)
 
-        # do the Tkinter canvas drawings (visible)
-        cv.create_line([0, center, width, center], fill='green')
+        # PIL create an empty image and draw object to draw on   memory only, not visible
+        # source [6]
+        self.temporary_drawn_image = Image.new("RGB", (300, 300), (255, 255, 255))
+        self.pil_canvas = ImageDraw.Draw(self.temporary_drawn_image)
 
-        # do the PIL image/draw (in memory) drawings
-        draw.line([0, center, width, center], green)
-
-        # PIL image can be saved as .png .jpg .gif or .bmp file (among others)
-        filename = "my_drawing.jpg"
-        image1.save(filename)
-        #Jonas test
         # add the canvas
         self.canvas.pack(side=LEFT)
         # adding events to the canvas to draw on
@@ -439,7 +429,9 @@ class neuralNetworkVisualizer:
         self.draw_picture_result_frame.pack(side=RIGHT)
 
 
-        ####################### frame_backquery_nn Layout ########################
+
+
+
     def init_GUI_tab_4(self):
         """init_GUI_tab_4
             * creates the content of the fourth tab
@@ -488,7 +480,7 @@ class neuralNetworkVisualizer:
     ##########################################################
 
 
-    ####################### for the NN buttons ###################################
+    ####################### for the nn buttons ###################################
 
 
     def open_nn_number(self):
@@ -596,7 +588,7 @@ class neuralNetworkVisualizer:
 
         # for every numberNN file in the folder
         for trained_nn_file in glob.glob(self.trained_nn_path_list[self.current_active_nn]):
-            print("get_all_nn current file: ",trained_nn_file)
+            logging.info("get_all_nn load file %s"%(trained_nn_file))
             # open the file and save the object 
             with open(trained_nn_file, 'rb') as input:
                 # append it to the list of NNs
@@ -724,7 +716,7 @@ class neuralNetworkVisualizer:
         # query the picture
         resultList = self.neural_network.query(imageToQuery)
         # show results
-        self.show_query_result(resultList)
+        self.show_query_result(resultList, self.query_picture_result_frame)
 
 
 
@@ -769,13 +761,14 @@ class neuralNetworkVisualizer:
 
 
 
-    def show_query_result(self, resList):
+    def show_query_result(self, resList, frame):
         """show_query_result
             * display the outputnode values on the screen
             * the highest one is chosen as guess of the neural network
 
             param:
-                resList(list[float]): array of the outputnode values of the neural network
+                resList(list[float]):   array of the outputnode values of the neural network
+                frame(Frame):           the frame on which the results should be displayed
 
             return:
                 none
@@ -787,19 +780,19 @@ class neuralNetworkVisualizer:
         logging.info("Function: show_query_result")
 
         # clear the old results
-        self.clear_frame(self.query_picture_result_frame)
+        self.clear_frame(frame)
         
         # the index of the highest value corresponds to the label
         result = numpy.argmax(resList)
         # add label with the result
-        result_label = Label(self.query_picture_result_frame, pady=20, text="neural Network thinks it's a %s"%(self.onnode_names[self.current_active_nn][result]))
+        result_label = Label(frame, pady=20, text="neural Network thinks it's a %s"%(self.onnode_names[self.current_active_nn][result]))
         # show label
         result_label.pack(fill=X)
 
         # add for every calculated onode a value
         for index, result in enumerate(resList):
             # add label with node and result
-            onoderesult_label = Label(self.query_picture_result_frame, text="output node %s:   %.3f%%"%(self.onnode_names[self.current_active_nn][index], 100*result))
+            onoderesult_label = Label(frame, text="output node %s:   %.3f%%"%(self.onnode_names[self.current_active_nn][index], 100*result))
             # show label
             onoderesult_label.pack(fill=X)
         
@@ -830,6 +823,9 @@ class neuralNetworkVisualizer:
         # source [2]
         if self.canvas_old_x and self.canvas_old_y:
             self.canvas.create_line(self.canvas_old_x,self.canvas_old_y,e.x,e.y,width=self.penwidth,fill=self.color_fg,capstyle=ROUND,smooth=TRUE)
+            # PIL can not draw a line with pen width - drawing a rectangle
+            half = int(self.penwidth/2)
+            self.pil_canvas.rectangle([self.canvas_old_x-half,self.canvas_old_y-half,e.x+half,e.y+half], self.color_fg)
 
         self.canvas_old_x = e.x
         self.canvas_old_y = e.y
@@ -880,6 +876,7 @@ class neuralNetworkVisualizer:
         logging.info("Function: clear")
 
         self.canvas.delete(ALL)
+        self.pil_canvas.rectangle([0,0,300,300], self.color_bg)
 
 
 
@@ -905,6 +902,20 @@ class neuralNetworkVisualizer:
             //TODO
         """
         logging.info("Function: query_drawn_image")
+        
+        # save image from canvas temporary
+        filename = "temporary_save_picture_drawn_on_canvas.jpg"
+        self.temporary_drawn_image.save(filename)
+
+        # prepare the picture
+        imageToQuery = self.prepare_picture_for_nn(filename)
+        # query the picture
+        resultList = self.neural_network.query(imageToQuery)
+        # show results
+        self.show_query_result(resultList, self.draw_picture_result_frame)
+        
+        # remove temporary saved image
+        os.remove(filename)
 
         return
 
@@ -1109,29 +1120,23 @@ class neuralNetworkVisualizer:
                                     ] 
             # dir for the logging file
             logging_file_path = os.path.join(self.file_dir, '../../Logs')
+
+            try: 
+                # create dir if not exist
+                # source [5]
+                Path(logging_file_path).mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                logging.error("Function: create_paths: unable create the dir \n%s"%(e))
+
             # path of the logging file
-            self.logging_file_name = os.path.join(logging_file_path, 'log_neuralNetworkVisualizer%s.txt'%(datetime.datetime.now().strftime("-%Y_%m_%d-%H_%M_%S")))
+            self.logging_file_name = os.path.join(logging_file_path, 'log_neuralNetworkVisualizer%s.log'%(datetime.datetime.now().strftime("-%Y_%m_%d-%H_%M_%S")))
+        
         except Exception as e:
             logging.error("Function: create_paths: unable to create the paths \n%s"%(e))
         
-        try: 
-            # create dir if not exist
-            # source [5]
-            Path(logging_file_path).mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            logging.error("Function: create_paths: unable create the dir \n%s"%(e))
+
 
     
-
-
-
-
-
-
-
-
-
-
 
 
 

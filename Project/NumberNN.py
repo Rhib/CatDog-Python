@@ -15,24 +15,6 @@
             von Tariq Rashid, O'Reilly Verlag
             license GPLv2 
 
-    Bewertung
-        Projektkriterien:
-        Kernkriterien:
-        (20%) - alle Funktionen und Module sowie Klassen müssen Docstrings nach z.B. Googole (Docstrings pep8) enthalten
-        (10%) - alle Funktionen und Klassen müssen jeweils 2 Testbeschreibungen enthalten
-
-        Sitekriterien:
-        (10%) - Eigenleistung: geeignetes Logverfahren suchen und anwenden
-        (20%) - Codequalität und Stil
-        (20%) - Funktionalität (requirement Informationen --- welche Module, Frameworks, Versionen, OS ... )
-
-        weitere Kriterien:
-        - wir wollen am Ende kein kundenfähiges System (20%)
-        - Programm Intiutivität für den Nutzer möglichst einfach
-        - Besondere Bemühungen und Aufwand, Elemente (Sound, Grafikdateien, Gameplay,... )
-        - pi mal Daumen 48 Stunden zur Orientierung
-
-        Bonuspunkte: -- Copy+Paste vs. Eigenaufwand
 """
 
 from tkinter import *
@@ -137,19 +119,19 @@ class neuralNetwork:
         return arr    
 
     def inverse_activation_function(self, arr):
-            """inverse_activation_function
-                * function to use output values and the logarithm function to get input values
+        """inverse_activation_function
+            * function to use output values and the logarithm function to get input values
 
-                param:
-                    arr     array of numbers to be transformed with log (output of node)
+            param:
+                arr     array of numbers to be transformed with log (output of node)
 
-                return:
-                    arr     array of log transformed values (input of node)
+            return:
+                arr     array of log transformed values (input of node)
 
-                test:
-                    * numbers are transformed correctly
-                    * return is correct format
-            """
+            test:
+                * numbers are transformed correctly
+                * return is correct format
+        """
         arrX = 0
         for x in arr:
             arrY = 0
@@ -163,21 +145,21 @@ class neuralNetwork:
     
     # train the neural network
     def train(self, inputs_list, targets_list):
-            """train
-                * query input list through neural network
-                * output is compared to target_list
-                * calculate difference back to weight function (who, wih)
+        """train
+            * query input list through neural network
+            * output is compared to target_list
+            * calculate difference back to weight function (who, wih)
 
-                param:
-                    input_list(list(float))     data to be queried to neural network
-                    targets_list(list(float))   expected output of neural network
-            
-                return:
-                    none
+            param:
+                input_list(list(float))     data to be queried to neural network
+                targets_list(list(float))   expected output of neural network
+        
+            return:
+                none
 
-                test:
-                    * node layers calculated correctly
-                    * weights are updated correctly
+            test:
+                * node layers calculated correctly
+                * weights are updated correctly
         """
         # convert inputs list to 2d array
         inputs = numpy.array(inputs_list, ndmin=2).T
@@ -208,20 +190,19 @@ class neuralNetwork:
 
     # query the neural network
     def query(self, inputs_list):
-            """query
-                * layers calculate values
-                * values are transfered between layers
-                * output node is calculated
+        """query
+            * layers calculate values
+            * values are transfered between layers
+            * output node is calculated
 
-                param:
-                    inputs_list(list(float))     data to be queried to neural network   
-                return:
-                    final_outputs(list(float))   calculated solution of the neural network
+            param:
+                inputs_list(list(float))     data to be queried to neural network   
+            return:
+                final_outputs(list(float))   calculated solution of the neural network
 
-                test:
-                * output is expected list
-                * nodes are calculated correctly
-
+            test:
+            * output is expected list
+            * nodes are calculated correctly
         """
         # convert inputs list to 2d array
         inputs = numpy.array(inputs_list, ndmin=2).T
